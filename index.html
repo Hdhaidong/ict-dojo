@@ -135,6 +135,46 @@ textarea.note:focus{outline:none;border-color:var(--accent)}
 .smtwrap{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:1080px){.lesson-grid{grid-template-columns:1fr}.chapters{position:static}.grid2,.smtwrap{grid-template-columns:1fr}}
 ::-webkit-selection{background:rgba(45,212,191,.3)}
+
+/* ---------- OpenWorker AI 底座 ---------- */
+.ai-badge{display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;user-select:none;transition:border-color .15s}
+.ai-badge:hover{border-color:var(--line2)}
+.ai-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.ai-badge.on .dot{background:var(--up);box-shadow:0 0 6px rgba(38,166,154,.8)}
+.ai-badge.busy .dot{background:var(--warn)}
+.ai-badge .bt{font-size:11.5px;color:var(--sub);line-height:1.3}
+.ai-badge .bt b{display:block;color:var(--txt);font-size:12px;letter-spacing:.4px}
+.modal-mask{position:fixed;inset:0;background:rgba(5,10,16,.72);backdrop-filter:blur(3px);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{width:520px;max-width:100%;max-height:86vh;overflow:auto;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:26px 28px}
+.modal h2{font-size:16px;margin:0 0 4px}
+.modal .mrow{margin:16px 0}
+.modal label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:6px;letter-spacing:.5px}
+.modal input{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line2);border-radius:9px;color:var(--txt);padding:9px 12px;font:12.5px var(--mono)}
+.modal input:focus{outline:none;border-color:var(--accent)}
+.ai-hint{border:1px dashed var(--line2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--sub);line-height:1.75;margin:14px 0}
+.ai-hint code{font:11px var(--mono);background:var(--bg);padding:2px 6px;border-radius:5px;color:var(--accent)}
+.ai-card{margin-top:18px;border:1px solid rgba(45,212,191,.28);border-radius:14px;background:linear-gradient(180deg,rgba(45,212,191,.05),transparent 60%),var(--panel);padding:20px 24px}
+.ai-card .ah{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:12px;letter-spacing:.4px}
+.ai-out{font-size:13.5px;line-height:1.85;color:var(--txt);white-space:pre-wrap}
+.ai-out b{color:var(--accent)}
+.ai-loading{display:flex;gap:5px;align-items:center;padding:8px 0}
+.ai-loading i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:aiBlink 1.2s infinite}
+.ai-loading i:nth-child(2){animation-delay:.2s}.ai-loading i:nth-child(3){animation-delay:.4s}
+@keyframes aiBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.ai-err{font-size:12.5px;color:#ef8b84;line-height:1.7;border:1px solid rgba(239,83,80,.3);border-radius:10px;padding:10px 14px;margin-top:12px}
+.ai-chat{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:18px 20px;margin-top:18px}
+.ai-chat .msgs{max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.ai-msg{max-width:86%;font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{align-self:flex-end;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.25);border-radius:12px 12px 3px 12px;padding:9px 13px}
+.ai-msg.bot{align-self:flex-start;color:var(--txt);padding:2px 4px}
+.ai-msg .who{font-size:10px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px}
+.ai-chat .inrow{display:flex;gap:8px}
+.ai-chat textarea{flex:1;min-height:44px;max-height:120px;background:var(--bg);border:1px solid var(--line2);border-radius:9px;color:var(--txt);padding:10px 12px;font:13px/1.6 inherit;resize:none}
+.ai-chat textarea:focus{outline:none;border-color:var(--accent)}
+.btn.ai{border-color:rgba(45,212,191,.5);color:var(--accent)}
+.btn.ai:hover{background:rgba(45,212,191,.12)}
+.btn.ai:disabled{opacity:.45;cursor:default}
+.ai-stat-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -153,6 +193,10 @@ textarea.note:focus{outline:none;border-color:var(--accent)}
     </div>
   </div>
   <nav id="nav"></nav>
+  <div class="ai-badge" id="aiBadge" title="OpenWorker AI 底座连接状态">
+    <span class="dot"></span>
+    <span class="bt"><b>AI · OpenWorker</b><span id="aiBadgeTxt">未连接</span></span>
+  </div>
   <div class="side-foot" id="sideFoot"></div>
 </aside>
 <main id="main"></main>
@@ -180,6 +224,7 @@ const C={bg:'#0d1219',line:'rgba(255,255,255,.045)',axis:'#5c6a7d',txt:'#8b98a9'
 
 /* ---------- 标的 ---------- */
 const INSTRUMENTS={
+  KOSPI200:{label:'韩国 KOSPI200',base:388.5,dec:1,vol:0.85,tf:'M5',tfMin:5},
   EURUSD:{label:'欧元/美元 EURUSD',base:1.0850,dec:5,vol:0.00095,tf:'M15',tfMin:15},
   GBPUSD:{label:'英镑/美元 GBPUSD',base:1.2720,dec:5,vol:0.00115,tf:'M15',tfMin:15},
   NAS100:{label:'纳斯达克100',base:18250,dec:1,vol:26,tf:'M5',tfMin:5},
@@ -192,6 +237,91 @@ const INS_KEYS=Object.keys(INSTRUMENTS);
 const STORE_KEY='ict-dojo-v1';
 let state=(()=>{try{const r=localStorage.getItem(STORE_KEY);if(r){const d=JSON.parse(r);return Object.assign({lessons:{},drills:{},replays:[],activity:{}},d)}}catch(e){}return {lessons:{},drills:{},replays:[],activity:{}}})();
 function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}}
+
+/* ============================================================
+   OpenWorker AI 底座（可选）
+   本地运行 openworker-server 后，提供 AI 教练 / 讲解 / 出题。
+   未连接时全部功能优雅降级，核心训练闭环不受影响。
+   ============================================================ */
+const OW_INJECTED_TOKEN=''; /* serve_local.py 会注入本地 sidecar token */
+const OW_INJECTED_URL='';   /* serve_local.py 会注入本地 openworker-server 地址 */
+const OW={
+  DEFAULT:{url:'http://127.0.0.1:8765',token:''},
+  status:'unknown',model:'',lastErr:'',
+  cfg(){
+    if(!state.ow||typeof state.ow!=='object')state.ow={};
+    state.ow.url=state.ow.url||OW.DEFAULT.url;
+    state.ow.token=state.ow.token||OW_INJECTED_TOKEN;
+    if(typeof state.ow.model!=='string')state.ow.model='';
+    return state.ow;
+  },
+  headers(json){
+    const c=OW.cfg(),hs={};
+    if(c.token)hs['X-OpenWorker-Token']=c.token;
+    if(json)hs['Content-Type']='application/json';
+    return hs;
+  },
+  async test(){
+    const tryOnce=async(url)=>{
+      try{
+        const r=await fetch(url.replace(/\/+$/,'')+'/v1/health',{headers:OW.headers(false)});
+        const j=await r.json().catch(()=>null);
+        if(j&&j.model){OW.status='ok';OW.model=j.model;OW.lastErr='';return {ok:true,model:j.model}}
+        if(j&&j.status==='ok'){OW.status='token';OW.model='';OW.lastErr='令牌无效或缺失';return {ok:false,err:'token'}}
+        throw new Error('bad');
+      }catch(e){return {ok:false,err:'network'}}
+    };
+    let r=await tryOnce(OW.cfg().url);
+    /* 自愈：保存的旧地址连不上时，自动切换到 serve_local.py 注入的地址 */
+    if(!r.ok&&OW_INJECTED_URL&&OW_INJECTED_URL.replace(/\/+$/,'')!==OW.cfg().url.replace(/\/+$/,'')){
+      const r2=await tryOnce(OW_INJECTED_URL);
+      if(r2.ok){OW.cfg().url=OW_INJECTED_URL.replace(/\/+$/,'');save();r=r2}
+    }
+    if(!r.ok&&r.err==='network'){
+      OW.status='off';OW.model='';
+      OW.lastErr=(location.protocol==='https:'||location.protocol==='file:')
+        ?'跨源限制：请从 http://localhost 打开本应用'
+        :'无法连接本地服务器';
+    }
+    aiBadgeRender();
+    return r;
+  },
+  async chat(messages,opts={}){
+    const r=await fetch(OW.cfg().url.replace(/\/+$/,'')+'/v1/chat/completions',{
+      method:'POST',headers:OW.headers(true),
+      body:JSON.stringify({messages,model:opts.model||OW.cfg().model||undefined})
+    });
+    if(r.status===401){OW.status='token';aiBadgeRender();throw new Error('令牌无效（401）：请在设置中更新 OpenWorker Token')}
+    if(!r.ok){
+      let detail='HTTP '+r.status;
+      try{const j=await r.json();if(j&&j.error)detail=j.error;if(j&&j.detail)detail=j.detail}catch(_){}
+      throw new Error('OpenWorker 返回错误：'+detail);
+    }
+    const j=await r.json();
+    const txt=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+    if(typeof txt!=='string'||!txt.trim())throw new Error('OpenWorker 返回了空回复（请先在 OpenWorker 中配置模型 API Key）');
+    return txt;
+  }
+};
+function aiBadgeRender(){
+  const b=$('#aiBadge'),t=$('#aiBadgeTxt');
+  if(!b)return;
+  b.classList.remove('on','busy');
+  if(OW.status==='ok'){b.classList.add('on');t.textContent='已连接 · '+(OW.model||'model')}
+  else if(OW.status==='busy'){b.classList.add('busy');t.textContent='连接中…'}
+  else t.textContent=OW.status==='token'?'令牌无效':'未连接';
+}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function aiMd(txt){
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc(txt)
+    .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+    .replace(/^###?\s*(.+)$/gm,'<b>$1</b>')
+    .replace(/^\s*[-·•]\s+(.+)$/gm,'• $1');
+}
+function aiUnavailable(err){
+  return `<div class="ai-err">${err||'AI 功能暂不可用'}：${OW.status==='ok'?'请求失败，请稍后重试。':'需要本地运行 <b>OpenWorker</b>（吴恩达开源桌面 Agent）。点击左侧「AI · OpenWorker」徽标查看接入指引。'}</div>`;
+}
 function markActivity(){state.activity[todayKey()]=1;save()}
 function calcStreak(){
   const days=Object.keys(state.activity).sort();if(!days.length)return 0;
@@ -838,13 +968,73 @@ NAV_INIT:{
   });
 }
 
+/* ---------- OpenWorker 设置面板 ---------- */
+AI_INIT:{
+  $('#aiBadge').onclick=()=>aiSettings();
+  const badge=$('#aiBadgeTxt');
+  if(!OW.cfg().token){badge.textContent='未配置'}
+  setTimeout(async()=>{OW.status='busy';aiBadgeRender();await OW.test()},400);
+}
+function aiSettings(){
+  if($('#aiModalMask'))return;
+  const c=OW.cfg();
+  const mask=h(`<div class="modal-mask" id="aiModalMask">
+    <div class="modal">
+      <h2>AI 底座 · OpenWorker 接入</h2>
+      <div class="dim" style="font-size:12px;margin-bottom:6px">由本地运行的 <b>OpenWorker</b>（吴恩达开源桌面 Agent）提供模型能力：复盘教练、课程追问、智能出题。全程本地调用，数据不出本机。</div>
+      <div class="mrow"><label>服务器地址（openworker-server）</label><input id="owUrl" value="${c.url}" spellcheck="false"></div>
+      <div class="mrow"><label>访问令牌 Token（%APPDATA%\\coworker\\sidecar-8765.token）</label><input id="owToken" value="${(c.token||'').replace(/"/g,'&quot;')}" spellcheck="false" placeholder="留空则用本页注入的本地 token"></div>
+      <div class="mrow"><label>模型（可选 · 如 deepseek:deepseek-v4-pro · gpt-5.6-sol）</label><input id="owModel" value="${(c.model||'').replace(/"/g,'&quot;')}" spellcheck="false" placeholder="留空则使用 OpenWorker 服务器默认模型"></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn ai" id="owTest">测试连接</button>
+        <span id="owTestRes" style="font-size:12.5px;color:var(--sub)">${OW.status==='ok'?'当前状态：已连接 · '+(OW.model||''):(OW.status==='token'?'当前状态：令牌无效':'当前状态：未连接')}</span>
+      </div>
+      <div class="ai-hint">
+        <b style="color:var(--txt)">接入三步</b><br>
+        1. 安装并启动：克隆 openworker 仓库后运行 <code>openworker-server --port 8765</code>（或在 OpenWorker 桌面应用中启动本地服务器）<br>
+        2. 填入令牌：Windows 下位于 <code>%APPDATA%\\coworker\\sidecar-8765.token</code>；或用本项目 <code>serve_local.py</code> 一键启动（自动注入令牌）<br>
+        3. 在 OpenWorker 中配置至少一个模型 API Key（OpenAI / DeepSeek / Anthropic / Ollama 本地模型等均可）<br>
+        <span style="color:var(--warn)">注意：浏览器跨源限制——在线版（GitHub Pages）与双击打开（file://）无法访问本地服务器，请通过 <code>serve_local.py</code> 或 <code>python -m http.server</code> 从 http://localhost 打开本页。</span><br>
+        <span style="color:var(--warn)">若调用报 402/429（余额不足/账户未激活），请在对应模型账户充值后，在上方「模型」中指定该账户的模型名。</span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+        <button class="btn ghost" id="owClose">关闭</button>
+        <button class="btn primary" id="owSave">保存</button>
+      </div>
+    </div></div>`);
+  document.body.appendChild(mask);
+  mask.querySelector('#owClose').onclick=()=>mask.remove();
+  mask.onclick=e=>{if(e.target===mask)mask.remove()};
+  mask.querySelector('#owTest').onclick=async()=>{
+    const res=mask.querySelector('#owTestRes');
+    res.textContent='测试中…';
+    OW.cfg().url=mask.querySelector('#owUrl').value.trim()||OW.DEFAULT.url;
+    OW.cfg().token=mask.querySelector('#owToken').value.trim()||OW_INJECTED_TOKEN;
+    OW.cfg().model=mask.querySelector('#owModel').value.trim();
+    const r=await OW.test();
+    res.innerHTML=r.ok
+      ?`<span style="color:var(--up)">✓ 连接成功 · 模型 ${r.model}</span>`
+      :(r.err==='token'
+        ?`<span style="color:#ef8b84">✗ 服务器可达，但令牌无效或缺失</span>`
+        :`<span style="color:#ef8b84">✗ 无法连接（${OW.lastErr||'网络/跨源错误'}）</span>`);
+  };
+  mask.querySelector('#owSave').onclick=()=>{
+    OW.cfg().url=mask.querySelector('#owUrl').value.trim()||OW.DEFAULT.url;
+    OW.cfg().token=mask.querySelector('#owToken').value.trim()||OW_INJECTED_TOKEN;
+    OW.cfg().model=mask.querySelector('#owModel').value.trim();
+    save();toast('已保存 OpenWorker 连接配置');
+    mask.remove();
+    OW.status='busy';aiBadgeRender();OW.test();
+  };
+}
+
 /* ============================================================
    总览
    ============================================================ */
 const VIEWS={};
 VIEWS.overview=()=>{
   const el=h(`<div class="view">
-    <div class="vhead"><div><h1>训练总览</h1><div class="desc">学习概念 → 图表练习 → 回放复盘，形成完整的训练闭环。</div></div><span class="badge">SYNTHETIC DATA · 学习用途</span></div>
+    <div class="vhead"><div><h1>训练总览</h1><div class="desc">主打 KOSPI200 韩国股市训练 · 摆脱亏损从刻意练习开始：学习概念 → 图表练习 → 回放复盘，AI 教练全程陪练。</div></div><span class="badge">SYNTHETIC DATA · 学习用途</span></div>
     <div class="statbar" id="ovStats"></div>
     <div class="cta" id="ovCta"></div>
     <div class="grid2">
@@ -878,7 +1068,7 @@ function renderOverview(){
   $('#ovGo').onclick=()=>nav('learn',{lesson:next.id});
   const rp=state.replays.slice(-3).reverse();
   $('#ovReplays').innerHTML=rp.length?rp.map(r=>`<div class="drill-row" style="border-bottom:1px solid var(--line)"><div><div class="nm" style="width:auto">${r.ins}</div><div class="ds">${fmtDay(r.ts)} · ${r.trades} 笔交易</div></div><div class="ac" style="text-align:right"><span class="${r.pnl>0?'pnl-pos':r.pnl<0?'pnl-neg':'pnl-zero'}">${sgn(r.pnl,r.dec!=null?r.dec:2)}</span><br>${Math.round(r.rate*100)}% 胜率</div></div>`).join(''):'<div class="dim" style="padding:8px 0">还没有复盘记录。去「K线回放复盘」逐根推进行情，练习多空决策。</div>';
-  const names={fvg:'FVG 识别',ob:'订单块',liq:'流动性',bos:'BOS / CHoCH',sweep:'扫荡识别',quiz:'概念测验'};
+  const names={fvg:'FVG 识别',ob:'订单块',liq:'流动性',bos:'BOS / CHoCH',sweep:'扫荡识别',quiz:'概念测验',aiquiz:'AI 定向出题'};
   const rows=Object.entries(names).map(([k,n])=>{
     const d=state.drills[k];
     return `<div class="drill-row"><div class="nm" style="font-size:13.5px">${n}</div><div class="ds">${d?d.attempts+' 题':'尚未开始'}</div><div class="ac">${d?Math.round(d.correct/d.attempts*100)+'%':'—'}</div></div>`;
@@ -932,6 +1122,50 @@ VIEWS.learn=()=>{
     bar.querySelector('#markDone').onclick=()=>{
       state.lessons[l.id]=Object.assign({},state.lessons[l.id],{done:true});
       save();markActivity();toast('已标记为已学');renderChapters();renderLesson();updateSideFoot();
+    };
+    /* AI 助教追问面板（OpenWorker） */
+    const chatBox=h(`<div class="ai-chat">
+      <div class="ah">✦ AI 助教 · 本课追问（OpenWorker）</div>
+      <div class="msgs"></div>
+      <div class="inrow">
+        <textarea placeholder="对本课概念有疑问？例如：FVG 为什么倾向于回补？"></textarea>
+        <button class="btn ai" style="flex:none">提问</button>
+      </div>
+    </div>`);
+    body.appendChild(chatBox);
+    const msgsEl=chatBox.querySelector('.msgs');
+    const ta=chatBox.querySelector('textarea');
+    const askBtn=chatBox.querySelector('.inrow .btn');
+    const hist=[];
+    const sysPrompt=`你是一位 ICT（Inner Circle Trader）概念讲解助教。学员正在学习第${l.no}课「${l.title}」。课程导语：${l.intro}\n本课要点：${l.points.join('；')}。\n请围绕本课概念回答学员追问，可联系其他 ICT 概念（市场结构、流动性、订单块、FVG、Killzone、溢价折价、SMT、2022模型），但不要大幅偏题。用中文，简洁，一般不超过 160 字，善用分点。学员使用合成行情练习，不要涉及真实市场建议。`;
+    const appendMsg=(who,txt,cls)=>{
+      const m=h(`<div class="ai-msg ${cls}"><div class="who">${who}</div><div>${aiMd(txt)}</div></div>`);
+      msgsEl.appendChild(m);msgsEl.scrollTop=msgsEl.scrollHeight;return m;
+    };
+    async function ask(){
+      const q=ta.value.trim();
+      if(!q||askBtn.disabled)return;
+      askBtn.disabled=true;ta.value='';ta.style.height='auto';
+      appendMsg('你',q,'user');
+      const loading=h(`<div class="ai-msg bot"><div class="ai-loading"><i></i><i></i><i></i></div></div>`);
+      msgsEl.appendChild(loading);msgsEl.scrollTop=msgsEl.scrollHeight;
+      try{
+        if(OW.status!=='ok'){const t=await OW.test();if(!t.ok)throw new Error(t.err==='token'?'令牌无效，请点左下角徽标配置 OpenWorker':'无法连接 OpenWorker，请先本地启动 openworker-server')}
+        loading.remove();
+        const prior=hist.slice(-8);
+        const txt=await OW.chat([{role:'system',content:sysPrompt},...prior,{role:'user',content:q}]);
+        hist.push({role:'user',content:q},{role:'assistant',content:txt});
+        appendMsg('AI 助教',txt,'bot');
+      }catch(e){
+        loading.remove();
+        appendMsg('AI 助教','', 'bot').innerHTML=`<div class="ai-err">${String(e.message||e)}</div>`;
+      }
+      askBtn.disabled=false;ta.focus();
+    }
+    askBtn.onclick=ask;
+    ta.onkeydown=e=>{
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()}
+      else{requestAnimationFrame(()=>{ta.style.height='auto';ta.style.height=Math.min(120,ta.scrollHeight)+'px'})}
     };
     renderLessonChart(l);
   }
@@ -1073,10 +1307,12 @@ VIEWS.practice=()=>{
     }).join('');
     body.innerHTML=`<div class="sect" style="margin-top:0">图表标记训练 · 每轮 5 题</div>${rows}
       <div class="sect">概念测验 · 全部课程混合 10 题</div>
-      <div class="drill-row"><div class="nm">概念测验</div><div class="ds">从 8 节课的题库随机抽取 10 题</div><div class="ac">${state.drills.quiz?state.drills.quiz.attempts+' 题 · '+Math.round(state.drills.quiz.correct/state.drills.quiz.attempts*100)+'%':'未开始'}</div><button class="btn sm" data-d="quiz">开始</button></div>`;
+      <div class="drill-row"><div class="nm">概念测验</div><div class="ds">从 8 节课的题库随机抽取 10 题</div><div class="ac">${state.drills.quiz?state.drills.quiz.attempts+' 题 · '+Math.round(state.drills.quiz.correct/state.drills.quiz.attempts*100)+'%':'未开始'}</div><button class="btn sm" data-d="quiz">开始</button></div>
+      <div class="sect">AI 智能出题 · OpenWorker</div>
+      <div class="drill-row"><div class="nm">AI 定向出题</div><div class="ds">分析你的薄弱概念，动态生成 5 道针对性选择题</div><div class="ac">${state.drills.aiquiz?state.drills.aiquiz.attempts+' 题 · '+Math.round(state.drills.aiquiz.correct/state.drills.aiquiz.attempts*100)+'%':'未开始'}</div><button class="btn sm ai" data-d="aiquiz">生成</button></div>`;
     body.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{
       const k=b.dataset.d;
-      if(k==='quiz')runQuiz();else runDrill(k);
+      if(k==='quiz')runQuiz();else if(k==='aiquiz')runAiQuiz();else runDrill(k);
     });
   }
   /* ----- 图表标记 ----- */
@@ -1216,6 +1452,71 @@ VIEWS.practice=()=>{
       body.querySelector('#qnext').onclick=()=>{st.i++;st.answered=false;render()};
     }
     render();
+  }
+  /* ----- AI 智能出题（OpenWorker） ----- */
+  async function runAiQuiz(){
+    const body=el.querySelector('#pBody');
+    body.innerHTML=`<div class="taskbar"><div class="task">AI 正在分析你的训练数据并出题…</div><button class="btn sm ghost" id="pBack">← 退出</button></div>
+      <div class="ai-card" style="margin-top:14px"><div class="ah">✦ AI 定向出题 · OpenWorker</div><div class="ai-loading"><i></i><i></i><i></i></div><div class="dim" style="font-size:11.5px">汇总练习正确率与课程进度，针对薄弱概念生成 5 题…</div></div>`;
+    body.querySelector('#pBack').onclick=()=>home();
+    try{
+      if(OW.status!=='ok'){const t=await OW.test();if(!t.ok)throw new Error(t.err==='token'?'令牌无效，请点左下角徽标配置 OpenWorker':'无法连接 OpenWorker，请先本地启动 openworker-server')}
+      const names={fvg:'FVG 识别',ob:'订单块',liq:'流动性',bos:'BOS / CHoCH',sweep:'扫荡识别',quiz:'概念测验',aiquiz:'AI 定向出题'};
+      const stats=Object.entries(names).map(([k,n])=>{
+        const d=state.drills[k];
+        return `${n}：${d&&d.attempts?d.attempts+' 题，正确率 '+Math.round(d.correct/d.attempts*100)+'%':'尚未练习'}`;
+      }).join('；');
+      const lessonsDone=LESSONS.filter(l=>state.lessons[l.id]&&state.lessons[l.id].done).map(l=>'第'+l.no+'课'+l.title);
+      const streak=calcStreak();
+      const txt=await OW.chat([
+        {role:'system',content:'你是 ICT（Inner Circle Trader）交易教学的出题专家。根据学员的练习统计，针对薄弱概念出一套针对性测验。只输出严格 JSON：一个数组，恰好 5 个对象，每个对象字段：q（题干，中文，不超过 60 字）、opts（恰好 4 个选项字符串，每个不超过 30 字）、ans（正确选项下标 0-3）、why（一句话解析，不超过 60 字）。重点考掌握度低的概念，可适度提高辨析难度（如看涨/看跌 FVG 区分、BOS 与 CHoCH 区分、流动性扫荡方向）。不要输出 JSON 以外的任何内容，不要用 markdown 代码块。'},
+        {role:'user',content:`学员训练数据：\n${stats}\n已完成课程：${lessonsDone.length?lessonsDone.join('、'):'暂无'}；连续训练 ${streak} 天。\n请生成 5 道针对薄弱点的选择题。`}
+      ]);
+      const jsonStr=(txt.match(/\[[\s\S]*\]/)||[])[0];
+      if(!jsonStr)throw new Error('AI 返回格式无法解析，请重试');
+      const qs=JSON.parse(jsonStr);
+      if(!Array.isArray(qs)||qs.length<3||!qs.every(q=>q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&Number.isInteger(q.ans)))throw new Error('AI 返回的题目结构不完整，请重试');
+      const st={i:0,correct:0,answered:false,list:qs};
+      function render(){
+        if(st.i>=st.list.length){
+          const d=state.drills.aiquiz||{attempts:0,correct:0};
+          d.attempts+=st.list.length;d.correct+=st.correct;
+          state.drills.aiquiz=d;save();markActivity();updateSideFoot();
+          body.innerHTML=`<div style="padding:34px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-align:center">
+            <div class="dim" style="letter-spacing:2px;font-size:11.5px;margin-bottom:8px">AI 定向出题 · 成绩</div>
+            <div style="font:700 52px var(--mono)">${st.correct}<span class="dim" style="font-size:24px">/${st.list.length}</span></div>
+            <div style="color:var(--sub);margin:8px 0 22px">${st.correct>=4?'薄弱概念已明显改善！':st.correct>=3?'错题正是要补的短板，看解析再练一轮。':'建议回课程复习对应概念，再用 AI 出题验证。'}</div>
+            <div style="display:flex;gap:12px;justify-content:center"><button class="btn primary ai" id="again">再出一套</button><button class="btn" id="back2">返回选择</button></div></div>`;
+          body.querySelector('#again').onclick=()=>runAiQuiz();
+          body.querySelector('#back2').onclick=()=>home();
+          return;
+        }
+        const q=st.list[st.i];
+        body.innerHTML=`<div class="taskbar"><div class="task">AI 出题 Q${st.i+1}/${st.list.length} · ${escH(q.q)}</div><button class="btn sm ghost" id="pBack">← 退出</button></div>
+          <div style="max-width:680px">${q.opts.slice(0,4).map((t,i)=>`<button class="opt" data-i="${i}"><span class="ol">${'ABCD'[i]}</span><span>${escH(t)}</span></button>`).join('')}</div>
+          <div class="qfb" id="qfb" style="display:none"></div>
+          <button class="btn primary" id="qnext" style="display:none">${st.i===st.list.length-1?'查看成绩':'下一题'}</button>`;
+        body.querySelector('#pBack').onclick=()=>home();
+        const btns=body.querySelectorAll('.opt');
+        btns.forEach((b,i)=>{
+          b.onclick=()=>{
+            if(st.answered)return;st.answered=true;
+            const ok=i===q.ans;if(ok)st.correct++;
+            btns.forEach((bb,j)=>{bb.disabled=true;if(j===q.ans)bb.classList.add('right');else if(j===i)bb.classList.add('wrong')});
+            const fb=body.querySelector('#qfb');
+            fb.style.display='block';fb.className='qfb '+(ok?'ok':'no');
+            fb.textContent=(ok?'✓ ':'✗ 正确答案：'+q.opts[q.ans]+'。')+(q.why||'');
+            body.querySelector('#qnext').style.display='inline-block';
+          };
+        });
+        body.querySelector('#qnext').onclick=()=>{st.i++;st.answered=false;render()};
+      }
+      render();
+    }catch(e){
+      body.innerHTML=`<div class="taskbar"><div class="task">AI 智能出题</div><button class="btn sm ghost" id="pBack">← 返回</button></div>
+        ${aiUnavailable(String(e.message||e))}`;
+      body.querySelector('#pBack').onclick=()=>home();
+    }
   }
   return {el,onShow(){home()}};
 };
@@ -1383,10 +1684,12 @@ VIEWS.replay=()=>{
                 <button class="btn primary" id="rSave">保存到日志</button>
                 <button class="btn" id="rAgain">再来一局</button>
                 <button class="btn ghost" id="rRef">叠加 ICT 参考标记</button>
+                <button class="btn ai" id="rCoach">✦ AI 教练点评</button>
               </div>
             </div>
           </div>
-        </div>`);
+        </div>
+        <div id="rCoachBox"></div>`);
       body2.querySelectorAll('#rTags .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
       body2.querySelector('#rSave').onclick=()=>{
         state.replays.push({ts:Date.now(),ins:insKey,label:ins.label,seed,trades:S.trades.length,rate,pnl,maxDD:dd,dec:ins.dec,
@@ -1395,6 +1698,28 @@ VIEWS.replay=()=>{
         save();markActivity();toast('已保存到交易日志');updateSideFoot();
       };
       body2.querySelector('#rAgain').onclick=()=>home();
+      body2.querySelector('#rCoach').onclick=async()=>{
+        const box=body2.querySelector('#rCoachBox');
+        const btn=body2.querySelector('#rCoach');
+        if(btn.disabled)return;
+        btn.disabled=true;
+        box.innerHTML=`<div class="ai-card"><div class="ah">✦ AI 复盘教练 · OpenWorker</div><div class="ai-loading"><i></i><i></i><i></i></div><div class="dim" style="font-size:11.5px">正在分析本局交易数据…</div></div>`;
+        try{
+          if(OW.status!=='ok'){const t=await OW.test();if(!t.ok)throw new Error(t.err==='token'?'TOKEN':'NET')}
+          const tradeLines=S.trades.length?S.trades.map((t,i)=>`${i+1}. ${t.dir>0?'做多':'做空'} @${fmtN(t.entry,ins.dec)}（第${t.eI-86}根K线）→ 平仓 @${fmtN(t.exit,ins.dec)}（第${t.xI-86}根）· ${t.pnl>=0?'盈':'亏'} ${fmtN(Math.abs(t.pnl),ins.dec)} 点`).join('\n'):'（本局未交易）';
+          const tags=[...body2.querySelectorAll('#rTags .chip.on')].map(c=>c.textContent).join('、')||'无';
+          const note=body2.querySelector('#rNote').value.trim()||'（未填写）';
+          const txt=await OW.chat([
+            {role:'system',content:'你是一位严格但建设性的 ICT（Inner Circle Trader）交易教练，精通市场结构（BOS/CHoCH）、流动性扫荡、订单块、公允价值缺口与 2022 综合入场模型。学员刚完成一局 K 线逐根回放训练（算法合成行情，非真实市场）。请基于学员数据点评：**本局亮点**、**主要问题**（结合 ICT 概念，例如是否在溢价区追多/折价区追空、是否等扫荡后的 CHoCH 确认、盈亏比与止损纪律）、**一条最优先的改进建议**。用中文，简洁分点，总共不超过 240 字，不要客套话。'},
+            {role:'user',content:`本局回放数据：\n标的：${ins.label}（${ins.tf} 合成行情，共 333 根K线逐根推进）\n交易 ${S.trades.length} 笔 · 胜率 ${S.trades.length?Math.round(rate*100):0}% · 总盈亏 ${sgn(pnl,ins.dec)} 点 · 最大回撤 ${fmtN(dd,ins.dec)} 点 · 系统评级 ${grade}\n每笔交易：\n${tradeLines}\n学员自选标签：${tags}\n学员笔记：${note}`}
+          ]);
+          box.innerHTML=`<div class="ai-card"><div class="ah">✦ AI 复盘教练 · OpenWorker（${OW.model}）</div><div class="ai-out">${aiMd(txt)}</div></div>`;
+        }catch(e){
+          const msg=String(e.message||e);
+          box.innerHTML=`<div class="ai-card"><div class="ah">✦ AI 复盘教练</div>${aiUnavailable(msg==='TOKEN'?'令牌无效':msg==='NET'?'无法连接 OpenWorker':msg)}</div>`;
+        }
+        btn.disabled=false;
+      };
       body2.querySelector('#rRef').onclick=e=>{
         if(chart.anns.length){chart.anns=[];e.target.textContent='叠加 ICT 参考标记';chart.render();return}
         const avg=avgRange(cs);
