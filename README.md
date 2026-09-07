@@ -10,6 +10,8 @@
 
 由 GitHub Pages 托管，浏览器直接打开即用，训练进度保存在浏览器 localStorage。
 
+**宣传片（15秒）**：在线观看 [hdhaidong.github.io/ict-dojo/ict-dojo-intro.mp4](https://hdhaidong.github.io/ict-dojo/ict-dojo-intro.mp4) · [下载 MP4](https://github.com/Hdhaidong/ict-dojo/raw/main/ict-dojo-intro.mp4)
+
 在线版包含完整的核心训练闭环（课程 / 图表练习 / 回放复盘 / 日志）。**AI 功能**需要本地运行 OpenWorker，见下方「接入 OpenWorker AI 底座」。
 
 ## 训练闭环
